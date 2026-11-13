@@ -5,7 +5,7 @@ Netflix, gym, apps, yearly memberships. It shows what they cost per month and
 per year, and **how much you would save by cancelling** the ones you choose.
 
 **Course:** Software Engineering, EADA, G1, Prof. Jordi Torras
-**Team:** Elena, Mimi
+**Team:** Elena, Mimi, Adam, Dani, Macijek
 
 **Live demo:** _paste your Streamlit Cloud link here_
 
