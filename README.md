@@ -7,7 +7,7 @@ per year, and **how much you would save by cancelling** the ones you choose.
 **Course:** Software Engineering, EADA, G1, Prof. Jordi Torras
 **Team:** Elena, Mimi, Adam, Dani, Macijek
 
-**Live demo:** _paste your Streamlit Cloud link here_
+**Live demo:** [_paste your Streamlit Cloud link here_](https://subscription-spotter-jwks4ccfopthj2bqsm4n6g.streamlit.app/)
 
 ---
 
