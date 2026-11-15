@@ -123,7 +123,11 @@ python -m pytest
 ## How we collaborated on GitHub
 
 - Public repository, `main` branch.
-- Each member uploaded their own part as commits. _(Update with who did what.)_
+- Each member uploaded their own part as commits. - Mimi and Elena shared the development work
+  equally: the detection rules, the web app, the sample data, the tests,
+  the README and the deployment. Each of them uploaded and edited files,
+  as the commit history shows.
+- Adam, Dani and Macijek took part in presenting the project.
 
 ## Limitations
 
