@@ -15,7 +15,8 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from subscriptions import clean_statement, find_subscriptions, yearly_savings
+from subscriptions import (clean_statement, find_subscriptions, read_statement_file,
+                           upcoming_charges, yearly_savings)
 
 SAMPLE_FILE = "sample_data/sample_statement.csv"
 
@@ -30,16 +31,22 @@ st.caption("🔒 Your file is only used during this session. It is not saved any
 
 # ---- 1. Get the data --------------------------------------------------------
 st.header("1. Your bank statement")
-uploaded = st.file_uploader("Upload a CSV file exported from your online bank", type="csv")
+uploaded = st.file_uploader(
+    "Upload the file exported from your online bank (CSV or Excel)", type=["csv", "xlsx"]
+)
 use_sample = st.checkbox("Or try it with our fake sample statement", value=uploaded is None)
 
-if uploaded is not None and not use_sample:
-    # sep=None lets pandas guess if the file uses commas or semicolons
-    raw = pd.read_csv(uploaded, sep=None, engine="python")
-elif use_sample:
-    raw = pd.read_csv(SAMPLE_FILE)
-else:
-    st.info("Upload a file or tick the sample box to start.")
+try:
+    if uploaded is not None and not use_sample:
+        raw = read_statement_file(uploaded.getvalue(), uploaded.name)
+    elif use_sample:
+        with open(SAMPLE_FILE, "rb") as f:
+            raw = read_statement_file(f.read(), SAMPLE_FILE)
+    else:
+        st.info("Upload a file or tick the sample box to start.")
+        st.stop()
+except (ValueError, UnicodeDecodeError, pd.errors.ParserError):
+    st.error("Sorry, we could not read this file. Is it a CSV or Excel export from your bank?")
     st.stop()
 
 with st.expander(f"Preview ({len(raw)} rows)"):
@@ -105,6 +112,28 @@ chart = (
 )
 st.altair_chart(chart, width="stretch")
 
+# Download the results as a CSV file (e.g. to open in Excel)
+st.download_button(
+    "⬇️ Download this list (CSV)",
+    data=subs.to_csv(index=False).encode("utf-8"),
+    file_name="my_subscriptions.csv",
+    mime="text/csv",
+)
+
+# Charges coming soon
+last_day = statement["date"].max()
+soon = upcoming_charges(active, today=last_day, days=30)
+st.subheader("📅 Next charges (within 30 days)")
+st.caption(
+    f"The next charge of each subscription, counted from the last day in your "
+    f"statement ({last_day.date()})."
+)
+if soon.empty:
+    st.write("No charges expected in the next 30 days.")
+else:
+    st.dataframe(soon, width="stretch", hide_index=True)
+    st.write(f"Total: **€{soon['Amount (€)'].sum():,.2f}**. Cancel before these dates to avoid paying.")
+
 # ---- 4. Savings ---------------------------------------------------------------
 st.header("4. What would you cancel?")
 to_cancel = st.multiselect("Choose subscriptions to cancel", active["Merchant"].tolist())
@@ -119,7 +148,8 @@ with st.expander("How does it work? / Limitations"):
         "A payment counts as recurring when the **same shop** appears at least 3 times "
         "(2 for yearly), for **about the same amount** (within 10%), at **regular "
         "intervals** (weekly, monthly, quarterly or yearly).\n\n"
-        "- Needs at least ~3 months of data (1 year+ to find yearly payments).\n"
+        "- Needs at least ~3 months of data (1 year+ to find yearly payments). "
+        "Brand-new subscriptions with fewer than 3 charges are not found yet.\n"
         "- Shop names are simplified automatically; very different descriptions for "
         "the same shop may be counted separately.\n"
         "- Subscriptions with changing amounts (e.g. phone bills) may be missed.\n"
